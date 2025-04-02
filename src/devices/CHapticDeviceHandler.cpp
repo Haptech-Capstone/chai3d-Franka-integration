@@ -75,6 +75,7 @@
 
 #if defined(C_ENABLE_CUSTOM_DEVICE_SUPPORT)
 #include "devices/CMyCustomDevice.h"
+#include "devices/CBlankDevice.h"
 #endif
 //------------------------------------------------------------------------------
 
@@ -240,17 +241,17 @@ void cHapticDeviceHandler::update()
     #endif
 
     //--------------------------------------------------------------------------
-    // search for MyCustom device
+    // search for Blank device
     //--------------------------------------------------------------------------
     #if defined(C_ENABLE_CUSTOM_DEVICE_SUPPORT)
 
     // check for how many devices are available for this class of devices
-    count = cMyCustomDevice::getNumDevices();
-
+    count = CBlankDevice::getNumDevices();
+    std::cout << count << " Blank devices found" << std::endl;
     // open all remaining devices
     for (int i=0; i<count; i++)
     {
-        device = cMyCustomDevice::create(i);
+        device = CBlankDevice::create(i);
         m_devices[m_numDevices] = device;
         m_numDevices++;
     }
