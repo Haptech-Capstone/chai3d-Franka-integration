@@ -77,7 +77,9 @@ CBlankDevice::CBlankDevice(unsigned int a_deviceNumber)
 {
     // the connection to your device has not yet been established.
     m_deviceReady = false;
-
+    simulatedX = 0.0;
+    simulatedY = 0.0;
+    simulatedZ = 0.0;
 
     ////////////////////////////////////////////////////////////////////////////
     /*
@@ -269,7 +271,7 @@ bool CBlankDevice::open()
 
     // *** INSERT YOUR CODE HERE ***
     // result = openConnectionToMyDevice();
-
+    configureTerminal();
 
     // update device status
     if (result)
@@ -313,6 +315,7 @@ bool CBlankDevice::close()
 
     // *** INSERT YOUR CODE HERE ***
     // result = closeConnectionToMyDevice()
+    restoreTerminal();
 
     // update status
     m_deviceReady = false;
@@ -429,16 +432,13 @@ bool CBlankDevice::getPosition(cVector3d& a_position)
     ////////////////////////////////////////////////////////////////////////////
 
     bool result = C_SUCCESS;
-    double x,y,z;
 
     // *** INSERT YOUR CODE HERE, MODIFY CODE below ACCORDINGLY ***
 
-    x = 0.0;    // x = getMyDevicePositionX()
-    y = 0.0;    // y = getMyDevicePositionY()
-    z = 0.0;    // z = getMyDevicePositionZ()
+    handleKeyboardInput();
 
     // store new position values
-    a_position.set(x, y, z);
+    a_position.set(simulatedX, simulatedY, simulatedZ);
 
     // estimate linear velocity
     estimateLinearVelocity(a_position);
@@ -654,6 +654,38 @@ bool CBlankDevice::getUserSwitches(unsigned int& a_userSwitches)
     return (C_SUCCESS);
 }
 
+void CBlankDevice::configureTerminal() {
+    struct termios t;
+    tcgetattr(STDIN_FILENO, &t);
+    t.c_lflag &= ~(ICANON | ECHO); // Disable canonical mode and echo
+    tcsetattr(STDIN_FILENO, TCSANOW, &t);
+    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK); // Set non-blocking mode
+}
+
+void CBlankDevice::restoreTerminal() {
+    struct termios t;
+    tcgetattr(STDIN_FILENO, &t);
+    t.c_lflag |= (ICANON | ECHO); // Re-enable canonical mode and echo
+    tcsetattr(STDIN_FILENO, TCSANOW, &t);
+}
+
+void CBlankDevice::handleKeyboardInput()
+{
+    char ch;
+    if (read(STDIN_FILENO, &ch, 1) > 0) // Non-blocking read
+    {
+        switch (ch)
+        {
+            case 'q': simulatedZ += 0.01; break; // Move up
+            case 'e': simulatedZ -= 0.01; break; // Move down
+            case 'w': simulatedX -= 0.01; break; // Move forward
+            case 's': simulatedX += 0.01; break; // Move backward
+            case 'a': simulatedY -= 0.01; break; // Move left
+            case 'd': simulatedY += 0.01; break; // Move right
+            default: break; // Ignore other keys
+        }
+    }
+}
 
 //------------------------------------------------------------------------------
 }       // namespace chai3d

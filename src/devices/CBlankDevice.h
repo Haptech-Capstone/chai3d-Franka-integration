@@ -48,6 +48,9 @@
 #if defined(C_ENABLE_CUSTOM_DEVICE_SUPPORT)
 //------------------------------------------------------------------------------
 #include "devices/CGenericHapticDevice.h"
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -188,6 +191,15 @@ protected:
 
     //! A short description of my variable
     int m_MyVariable;
+
+private:
+    double simulatedX;
+    double simulatedY;
+    double simulatedZ;
+
+    void configureTerminal();
+    void restoreTerminal();
+    void handleKeyboardInput();
 };
 
 //------------------------------------------------------------------------------
