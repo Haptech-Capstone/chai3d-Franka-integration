@@ -45,6 +45,7 @@
 #include "chai3d.h"
 //------------------------------------------------------------------------------
 #include <GLFW/glfw3.h>
+#include "prototype_sim.h"
 //------------------------------------------------------------------------------
 using namespace chai3d;
 using namespace std;
