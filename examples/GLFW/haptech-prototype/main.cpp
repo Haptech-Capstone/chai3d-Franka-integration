@@ -1,10 +1,9 @@
-#include "prototype_sim.h"
-#include <iostream>
+#include "simulation_manager.h"
 
-int main(int argc, char* argv[]) {
-    std::cout << "Press Enter to start the sim:";
-    std::cin.get();
-    
-    load(argc, argv);
+int main() {
+    SimulationManager sim;
+    if (sim.initialize()) {
+        sim.runMainLoop();
+    }
     return 0;
 }
