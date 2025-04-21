@@ -249,8 +249,20 @@ bool SimulationManager::addObject(cGenericObject* obj, double x, double y, doubl
         return false;
     }
 
+    // Add the object into the world
     simContext.world->addChild(obj);
     obj->setLocalPos(x, y, z);
+
+    // Get workspace scale
+    double workspaceScaleFactor = simContext.tool->getWorkspaceScaleFactor();
+    cHapticDeviceInfo hapticDeviceInfo = simContext.hapticDevice->getSpecifications();
+    double maxStiffness = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
+
+    // Assign material
+    cMaterialPtr material = cMaterial::create();
+    material->setStiffness(maxStiffness);
+    obj->setMaterial(material);
+
     return true;
 }
 
@@ -359,27 +371,26 @@ void SimulationManager::updateGraphics(void) {
 
 // this function contains the main haptics simulation loop
 void SimulationManager::updateHaptics(void) {
-    // simulation in now running
     simContext.simulationRunning  = true;
     simContext.simulationFinished = false;
 
-    // main haptic simulation loop
-    while(simContext.simulationRunning)
-    {
-        // compute global reference frames for each object
+    while (simContext.simulationRunning) {
+        // update world transforms
         simContext.world->computeGlobalPositions(true);
 
-        // update position and orientation of tool
+        // update tool from device
         simContext.tool->updateFromDevice();
 
         // compute interaction forces
         simContext.tool->computeInteractionForces();
 
-        // send forces to haptic device
+        // apply forces
         simContext.tool->applyToDevice();
+
+        // update haptic loop frequency
+        simContext.freqCounterHaptics.signal(1);
     }
-    
-    // exit haptics thread
+
     simContext.simulationFinished = true;
 }
 

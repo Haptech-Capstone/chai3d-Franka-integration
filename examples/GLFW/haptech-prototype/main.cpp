@@ -20,7 +20,7 @@ void runTestsAfterDelay() {
     std::this_thread::sleep_for(std::chrono::seconds(3));
 
     // Test 2: Add a sphere
-    success = SimulationManager::addSphere(0.1, 0.0, 0.3, 0.1);
+    success = SimulationManager::addSphere(0.1, 0.0, 0.0, 0.1);
     if (success) {
         std::cout << "[Test Thread] Sphere added." << std::endl;
     } else {
