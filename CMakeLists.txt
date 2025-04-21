@@ -226,6 +226,14 @@ endif()
 # Link against the libfranka library 
 target_link_libraries(chai3d PUBLIC Franka::Franka)
 
+option(USE_FRANKA_DEVICE "Use Franka device instead of custom" ON)
+
+if(USE_FRANKA_DEVICE)
+    add_compile_definitions(C_ENABLE_FRANKA_DEVICE_SUPPORT)
+else()
+    add_compile_definitions(C_ENABLE_CUSTOM_DEVICE_SUPPORT)
+endif()
+
 # library exports
 set (CHAI3D_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src" "${PROJECT_SOURCE_DIR}/external/Eigen" "${PROJECT_SOURCE_DIR}/external/glew/include" "${OPENGL_INCLUDE_DIR}")
 set (CHAI3D_LIBRARIES chai3d ${OPENGL_LIBRARIES})

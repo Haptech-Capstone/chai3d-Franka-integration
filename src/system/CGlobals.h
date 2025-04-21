@@ -175,7 +175,7 @@
     //--------------------------------------------------------------------
     // HAPTIC DEVICES
     //--------------------------------------------------------------------
-    #define C_ENABLE_CUSTOM_DEVICE_SUPPORT
+    // #define C_ENABLE_CUSTOM_DEVICE_SUPPORT
     // #define C_ENABLE_DELTA_DEVICE_SUPPORT
     // #define C_ENABLE_PHANTOM_DEVICE_SUPPORT
     // #define C_ENABLE_LEAP_DEVICE_SUPPORT
@@ -209,7 +209,7 @@
     //--------------------------------------------------------------------
     // HAPTIC DEVICES
     //--------------------------------------------------------------------
-    #define C_ENABLE_CUSTOM_DEVICE_SUPPORT
+    // #define C_ENABLE_CUSTOM_DEVICE_SUPPORT
     // #define C_ENABLE_DELTA_DEVICE_SUPPORT
     // #define C_ENABLE_PHANTOM_DEVICE_SUPPORT
     // #define C_ENABLE_LEAP_DEVICE_SUPPORT
@@ -239,7 +239,7 @@
     //--------------------------------------------------------------------
     // HAPTIC DEVICES
     //--------------------------------------------------------------------
-    #define C_ENABLE_CUSTOM_DEVICE_SUPPORT
+    // #define C_ENABLE_CUSTOM_DEVICE_SUPPORT
     // #define C_ENABLE_DELTA_DEVICE_SUPPORT
     // #define C_ENABLE_LEAP_DEVICE_SUPPORT
     // #define C_ENABLE_FRANKA_DEVICE_SUPPORT    
