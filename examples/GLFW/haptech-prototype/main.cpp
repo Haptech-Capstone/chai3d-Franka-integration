@@ -1,9 +1,42 @@
 #include "simulation_manager.h"
+#include <thread>
+#include <chrono>
+#include <iostream>
+
+void runTestsAfterDelay() {
+    // Give the simulation a few seconds to boot
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    std::cout << "[Test Thread] Running test code..." << std::endl;
+
+    // Test 1: change background color
+    bool success = SimulationManager::setBackgroundColor(0.2, 0.3, 0.8);
+    if (success) {
+        std::cout << "[Test Thread] Background color updated." << std::endl;
+    } else {
+        std::cout << "[Test Thread] Simulation not running yet!" << std::endl;
+    }
+
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    // Test 2: Add a sphere
+    success = SimulationManager::addSphere(0.1, 0.0, 0.3, 0.1);
+    if (success) {
+        std::cout << "[Test Thread] Sphere added." << std::endl;
+    } else {
+        std::cout << "[Test Thread] Simulation not running yet!" << std::endl;
+    }
+}
 
 int main() {
-    SimulationManager sim;
-    if (sim.initialize()) {
-        sim.runMainLoop();
-    }
+    // Launch test thread (so that simulation is on main thread)
+    std::thread testThread(runTestsAfterDelay);
+
+    // Run simulation on main thread
+    SimulationManager::run();
+
+    // Join test thread after simulation ends
+    testThread.join();
+
     return 0;
 }
