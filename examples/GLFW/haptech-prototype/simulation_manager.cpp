@@ -267,7 +267,10 @@ bool SimulationManager::addObject(cGenericObject* obj, double x, double y, doubl
 }
 
 bool SimulationManager::addSphere(double radius, double x, double y, double z) {
-    cShapeSphere* sphere = new cShapeSphere(radius);
+    cMesh* sphere = new cMesh();
+    cCreateSphere(sphere, radius);
+    sphere->createAABBCollisionDetector(radius);
+
     return addObject(sphere, x, y, z);
 }
 
@@ -389,6 +392,9 @@ void SimulationManager::updateHaptics(void) {
 
         // update haptic loop frequency
         simContext.freqCounterHaptics.signal(1);
+
+        // log position/force
+        std::cout << "Device position: " << simContext.tool->getGlobalPos() << ", Device force: " << simContext.tool->getDeviceGlobalForce() << std::endl;
     }
 
     simContext.simulationFinished = true;
