@@ -169,6 +169,8 @@ bool SimulationManager::run() {
     // the tool is located inside an object for instance. 
     simContext.tool->setWaitForSmallForce(true);
 
+    simContext.tool->setShowContactPoints(true);
+
     // start the haptic tool
     simContext.tool->start();
 
@@ -192,6 +194,10 @@ bool SimulationManager::run() {
     // create a thread which starts the main haptics rendering loop
     simContext.hapticsThread = new cThread();
     simContext.hapticsThread->start(updateHaptics, CTHREAD_PRIORITY_HAPTICS);
+
+    // start debug loop
+    simContext.dataThread = new cThread();
+    simContext.dataThread->start(dataPollingThread, CTHREAD_PRIORITY_GRAPHICS);
 
     // setup callback when application exits
     atexit(close);
@@ -392,12 +398,37 @@ void SimulationManager::updateHaptics(void) {
 
         // update haptic loop frequency
         simContext.freqCounterHaptics.signal(1);
-
-        // log position/force
-        std::cout << "Device position: " << simContext.tool->getGlobalPos() << ", Device force: " << simContext.tool->getDeviceGlobalForce() << std::endl;
     }
 
     simContext.simulationFinished = true;
+}
+
+void SimulationManager::dataPollingThread() {
+    simContext.dataThreadRunning = true;
+
+    while (simContext.simulationRunning) {
+        cHapticPoint* hapticPoint = simContext.tool->getHapticPoint(0);
+
+        if (hapticPoint) {
+            cVector3d proxyPos = hapticPoint->getGlobalPosProxy();
+            cVector3d computedForce = hapticPoint->getLastComputedForce();
+
+            cVector3d devicePos;
+            simContext.hapticDevice->getPosition(devicePos);
+
+            cVector3d deviceForce;
+            simContext.hapticDevice->getForce(deviceForce);
+
+            std::cout << "[DEBUG] Device pos: " << devicePos
+                      << " | Proxy pos: " << proxyPos
+                      << " | Device force: " << deviceForce
+                      << " | Computed force: " << computedForce << std::endl;
+        }
+
+        cSleepMs(1000 / DATA_POLL_FREQUENCY);
+    }
+
+    simContext.dataThreadRunning = false;
 }
 
 // this function closes the application
@@ -413,6 +444,12 @@ void SimulationManager::close(void) {
     
     delete simContext.hapticsThread;
     simContext.hapticsThread = nullptr;
+
+    if (simContext.dataThreadRunning) {
+        cSleepMs(100);
+    }
+    delete simContext.dataThread;
+    simContext.dataThread = nullptr;    
     
     delete simContext.handler;
     simContext.handler = nullptr;

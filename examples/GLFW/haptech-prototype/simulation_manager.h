@@ -5,6 +5,8 @@
 
 using namespace chai3d;
 
+#define DATA_POLL_FREQUENCY 10 // Hz
+
 struct SimulationContext {
     // stereo Mode
     /*
@@ -48,6 +50,9 @@ struct SimulationContext {
     // flag to indicate if the haptic simulation has terminated
     bool simulationFinished = false;
 
+    // flag to indicate data thread running
+    bool dataThreadRunning = false;
+
     // a frequency counter to measure the simulation graphic rate
     cFrequencyCounter freqCounterGraphics;
 
@@ -56,6 +61,9 @@ struct SimulationContext {
 
     // haptic thread
     cThread* hapticsThread;
+
+    // debug thread
+    cThread* dataThread;
 
     // a handle to window display context
     GLFWwindow* window = NULL;
@@ -100,6 +108,9 @@ private:
 
     // this function contains the main haptics simulation loop
     static void updateHaptics(void);
+
+    // Thread to poll for data
+    static void dataPollingThread();
 
     // this function closes the application
     static void close(void);
