@@ -1,7 +1,11 @@
+#ifndef SIMULATION_MANAGER_H
+#define SIMULATION_MANAGER_H
+
 #pragma once
 #include "chai3d.h"
 #include <GLFW/glfw3.h>
 #include <mutex>
+#include <unordered_map>
 
 using namespace chai3d;
 
@@ -28,6 +32,9 @@ struct SimulationContext {
 
     // a camera to render the world in the window display
     cCamera* camera;
+
+    // map object ID's to pointers to the actual objects
+    std::unordered_map<std::string, cGenericObject*> objectMap;
 
     // a light source to illuminate the objects in the world
     cDirectionalLight *light;
@@ -76,6 +83,8 @@ struct SimulationContext {
 
     // swap interval for the display context (vertical synchronization)
     int swapInterval = 1;
+
+    bool debug = false;
 };
 
 // Singleton SimulationManager class
@@ -87,12 +96,27 @@ public:
     // runs the simulation
     static bool run();
 
+    // sets debug mode
+    static void setDebugMode(bool debug);
+
     // SCENE SETTINGS
+    static bool reset();
     static bool setBackgroundColor(double r, double g, double b);
 
-    // OBJECTS
-    static bool addObject(cGenericObject* obj, double x, double y, double z);
-    static bool addSphere(double radius, double x, double y, double z);
+    // GENERAL OBJECT FUNCTIONALITY
+
+    /*
+    NOTE: Once an object is added to the simulation via addObject(),
+    the SimulationManager takes full ownership and is responsible for
+    deleting the object. Do not manually delete or reuse pointers added here.
+    */
+
+    static bool addObject(std::string id, cGenericObject* obj, double x, double y, double z);
+    static bool removeObject(std::string id);
+    static bool removeAllObjects();
+
+    // OBJECT HELPERS
+    static bool addSphere(std::string id, double radius, double x, double y, double z);
 private:
     // callback when the window display is resized
     static void windowSizeCallback(GLFWwindow* a_window, int a_width, int a_height);
@@ -115,3 +139,5 @@ private:
     // this function closes the application
     static void close(void);
 };
+
+#endif
