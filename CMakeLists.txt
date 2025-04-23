@@ -223,7 +223,7 @@ else()
 endif()
 
 
-# Link against the libfranka library 
+# Link against the libfranka library
 target_link_libraries(chai3d PUBLIC Franka::Franka)
 
 option(USE_FRANKA_DEVICE "Use Franka device instead of custom" ON)
@@ -233,6 +233,28 @@ if(USE_FRANKA_DEVICE)
 else()
     add_compile_definitions(C_ENABLE_CUSTOM_DEVICE_SUPPORT)
 endif()
+
+# --- Use pkg-config to find gRPC and Protobuf ---
+find_package(PkgConfig REQUIRED)
+
+# Look for grpc++ and protobuf via pkg-config
+pkg_check_modules(GRPC REQUIRED grpc++ grpc)
+pkg_check_modules(PROTOBUF REQUIRED protobuf)
+
+# Include directories
+include_directories(${GRPC_INCLUDE_DIRS})
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+
+# Link directories
+link_directories(${GRPC_LIBRARY_DIRS})
+link_directories(${PROTOBUF_LIBRARY_DIRS})
+
+# Link libraries
+target_link_libraries(chai3d
+  PUBLIC
+    ${GRPC_LIBRARIES}
+    ${PROTOBUF_LIBRARIES}
+)
 
 # library exports
 set (CHAI3D_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src" "${PROJECT_SOURCE_DIR}/external/Eigen" "${PROJECT_SOURCE_DIR}/external/glew/include" "${OPENGL_INCLUDE_DIR}")
