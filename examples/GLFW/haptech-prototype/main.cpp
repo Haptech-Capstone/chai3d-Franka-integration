@@ -1,4 +1,5 @@
 #include "simulation_manager.h"
+#include "franka_trial_server.h"
 #include <thread>
 #include <chrono>
 #include <iostream>
@@ -26,7 +27,8 @@ void runTestsAfterDelay() {
     } else {
         std::cout << "[Test Thread] Adding a sphere failed." << std::endl;
     }
-
+    
+    /*
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     // Test 3: Remove the sphere
@@ -56,18 +58,20 @@ void runTestsAfterDelay() {
     } else {
         std::cout << "[Test Thread] Resetting simulation failed." << std::endl;
     }
+    */
 }
 
 int main() {
+    SimulationManager::setDebugMode(true);
+
     // Launch test thread (so that simulation is on main thread)
-    std::thread testThread(runTestsAfterDelay);
+    std::thread serverThread(runServer);
 
     // Run simulation on main thread
-    SimulationManager::setDebugMode(false);
     SimulationManager::run();
 
     // Join test thread after simulation ends
-    testThread.join();
+    serverThread.join();
 
     return 0;
 }
