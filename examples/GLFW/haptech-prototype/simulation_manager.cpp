@@ -193,6 +193,10 @@ bool SimulationManager::run() {
     simContext.hapticsThread = new cThread();
     simContext.hapticsThread->start(updateHaptics, CTHREAD_PRIORITY_HAPTICS);
 
+    // start debug loop
+    simContext.dataThread = new cThread();
+    simContext.dataThread->start(dataPollingThread, CTHREAD_PRIORITY_GRAPHICS);
+
     // setup callback when application exits
     atexit(close);
 
@@ -231,10 +235,26 @@ bool SimulationManager::run() {
     return true;
 }
 
+void SimulationManager::setDebugMode(bool debug) {
+    simContext.debug = debug;
+}
+
 // SIMULATION MANIPULATION //
+
+bool SimulationManager::reset() {
+    if (!simContext.simulationRunning) {
+        std::cout << "[ERROR] Simulation is not running." << std::endl;
+        return false;
+    }
+
+    setBackgroundColor(0.0, 0.0, 0.0);
+    removeAllObjects();
+    return true;
+}
 
 bool SimulationManager::setBackgroundColor(double r, double g, double b) {
     if (!simContext.simulationRunning) {
+        std::cout << "[ERROR] Simulation is not running." << std::endl;
         return false;
     }
 
@@ -244,8 +264,19 @@ bool SimulationManager::setBackgroundColor(double r, double g, double b) {
     return true;
 }
 
-bool SimulationManager::addObject(cGenericObject* obj, double x, double y, double z) {
+bool SimulationManager::addObject(std::string id, cGenericObject* obj, double x, double y, double z) {
     if (!simContext.simulationRunning) {
+        std::cout << "[ERROR] Simulation is not running." << std::endl;
+        return false;
+    }
+
+    if (!obj) {
+        std::cout << "[ERROR] Object is null." << std::endl;
+        return false;
+    }
+
+    if (simContext.objectMap.find(id) != simContext.objectMap.end()) {
+        std::cout << "[ERROR] Object with ID " << id << " already exists." << std::endl;
         return false;
     }
 
@@ -263,15 +294,63 @@ bool SimulationManager::addObject(cGenericObject* obj, double x, double y, doubl
     material->setStiffness(maxStiffness);
     obj->setMaterial(material);
 
+    // Add the object to the map
+    simContext.objectMap[id] = obj;
+    std::cout << "[DEBUG] Added object with ID " << id << " at position (" << x << ", " << y << ", " << z << ")." << std::endl;
+
     return true;
 }
 
-bool SimulationManager::addSphere(double radius, double x, double y, double z) {
+bool SimulationManager::removeObject(std::string id) {
+    if (!simContext.simulationRunning) {
+        std::cout << "[ERROR] Simulation is not running." << std::endl;
+        return false;
+    }
+
+    bool success;
+
+    // Remove the object from the world
+    auto it = simContext.objectMap.find(id);
+    if (it != simContext.objectMap.end()) {
+        cGenericObject* obj = it->second;
+        simContext.world->removeChild(obj);
+        delete obj;
+        simContext.objectMap.erase(it);
+        std::cout << "[DEBUG] Removed object with ID " << id << "." << std::endl;
+        success = true;
+    } else {
+        std::cout << "[ERROR] Object with ID " << id << " not found." << std::endl;
+        success = false;
+    }
+
+    return success;
+}
+
+bool SimulationManager::removeAllObjects() {
+    if (!simContext.simulationRunning) {
+        std::cout << "[ERROR] Simulation is not running." << std::endl;
+        return false;
+    }
+
+    std::vector<std::string> ids;
+    for (const auto& pair : simContext.objectMap) {
+        ids.push_back(pair.first);
+    }
+
+    for (const auto& id : ids) {
+        removeObject(id);
+    }
+
+    std::cout << "[DEBUG] Removed all objects." << std::endl;
+    return true;
+}
+
+bool SimulationManager::addSphere(std::string id, double radius, double x, double y, double z) {
     cMesh* sphere = new cMesh();
     cCreateSphere(sphere, radius);
     sphere->createAABBCollisionDetector(radius);
 
-    return addObject(sphere, x, y, z);
+    return addObject(id, sphere, x, y, z);
 }
 
 // PRIVATE CALLBACKS //
@@ -392,16 +471,46 @@ void SimulationManager::updateHaptics(void) {
 
         // update haptic loop frequency
         simContext.freqCounterHaptics.signal(1);
-
-        // log position/force
-        std::cout << "Device position: " << simContext.tool->getGlobalPos() << ", Device force: " << simContext.tool->getDeviceGlobalForce() << std::endl;
     }
 
     simContext.simulationFinished = true;
 }
 
+void SimulationManager::dataPollingThread() {
+    simContext.dataThreadRunning = true;
+
+    while (simContext.simulationRunning) {
+        cHapticPoint* hapticPoint = simContext.tool->getHapticPoint(0);
+
+        if (hapticPoint) {
+            cVector3d proxyPos = hapticPoint->getGlobalPosProxy();
+            cVector3d computedForce = hapticPoint->getLastComputedForce();
+
+            cVector3d devicePos;
+            simContext.hapticDevice->getPosition(devicePos);
+
+            cVector3d deviceForce;
+            simContext.hapticDevice->getForce(deviceForce);
+            
+            if (simContext.debug) {
+                std::cout << "[DEBUG] Device pos: " << devicePos
+                        << " | Proxy pos: " << proxyPos
+                        << " | Device force: " << deviceForce
+                        << " | Computed force: " << computedForce << std::endl;
+            }
+        }
+
+        cSleepMs(1000 / DATA_POLL_FREQUENCY);
+    }
+
+    simContext.dataThreadRunning = false;
+}
+
 // this function closes the application
 void SimulationManager::close(void) {
+    // remove all objects from the world
+    removeAllObjects();
+
     // stop the simulation
     simContext.simulationRunning = false;
 
@@ -413,6 +522,12 @@ void SimulationManager::close(void) {
     
     delete simContext.hapticsThread;
     simContext.hapticsThread = nullptr;
+
+    if (simContext.dataThreadRunning) {
+        cSleepMs(100);
+    }
+    delete simContext.dataThread;
+    simContext.dataThread = nullptr;
     
     delete simContext.handler;
     simContext.handler = nullptr;
