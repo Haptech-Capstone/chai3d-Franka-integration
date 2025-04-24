@@ -6,14 +6,92 @@ grpc::Status FrankaTrialServiceImpl::RunTrial(
     const TrialRequest* request,
     grpc::ServerWriter<TrialResponseStream>* writer
 ) {
-    // load trial with SimulationManager, send trial started update
+    TrialResponseStream statusMsg;
 
-    // stream data points for the given amount of time
+    // make sure we can run a trial
+    if (!SimulationManager::simContext.simulationRunning) {
+        std::cout << "[ERROR] Simulation is not running." << std::endl;
 
-    // reset environment (SimulationManager::reset())
+        TrialStatusUpdate* status = statusMsg.mutable_statusupdate();
+        status->set_status(TrialStatus::ERROR);
+        status->set_message("Simulation is not running yet.");
+        writer->Write(statusMsg);
 
-    // send trial completed update
+        return grpc::Status::OK;
+    }
 
+    if (SimulationManager::trialContext.trialRunning) {
+        std::cout << "[ERROR] There is already a trial running." << std::endl;
+
+        TrialStatusUpdate* status = statusMsg.mutable_statusupdate();
+        status->set_status(TrialStatus::ERROR);
+        status->set_message("There is already a trial running.");
+        writer->Write(statusMsg);
+
+        return grpc::Status::OK;
+    }
+
+    // add objects (hard coded for now, load from config info later)
+    SimulationManager::reset();
+
+    if (!SimulationManager::addSphere("THE SPHERE", 0.1, 0.2, 0.0, 0.0)) {
+
+        TrialStatusUpdate* status = statusMsg.mutable_statusupdate();
+        status->set_status(TrialStatus::ERROR);
+        status->set_message("Something went wrong loading the trial.");
+        writer->Write(statusMsg);
+
+        return grpc::Status::OK;
+    }
+
+    // set trial context
+    SimulationManager::trialContext.trialId = request->trial_id();
+    SimulationManager::trialContext.trialDuration = request->trialduration();
+    SimulationManager::trialContext.time = 0.0;
+
+    // start trial
+    std::cout << "[TRIAL] Trial started: " << request->trial_id() << " for " << request->trialduration() << "s" << std::endl;
+
+    TrialStatusUpdate* status = statusMsg.mutable_statusupdate();
+    status->set_status(TrialStatus::STARTED);
+    status->set_message("The trial has started.");
+    writer->Write(statusMsg);
+
+    SimulationManager::trialContext.trialRunning = true;
+
+    cPrecisionClock clock;
+    clock.start();
+
+    // go until time limit reached
+    while (SimulationManager::trialContext.time < SimulationManager::trialContext.trialDuration) {
+        /*
+         TODO: write data points to stream. how this will be done idk. 
+         maybe we can just pull the robot data straight from SimulationManager::simContext like in the dataPollingThread function
+         but that sometimes doesn't work for some reason so idk, have fun!
+        */
+
+        if (SimulationManager::simContext.debug) {
+            std::cout << "[DEBUG] [" << SimulationManager::trialContext.trialId << "] t = " << SimulationManager::trialContext.time << std::endl;
+        }
+
+        double dt = clock.getCurrentTimeSeconds();
+        clock.reset();
+        SimulationManager::trialContext.time += dt;
+
+        // do not constantly get data, this would overflow everything
+        cSleepMs(1000 / DATA_POLL_FREQUENCY);
+    }
+
+    // stop trial
+    SimulationManager::trialContext.trialRunning = false;
+    std::cout << "[TRIAL] Trial ended: " << SimulationManager::trialContext.trialId << ", lasted " << SimulationManager::trialContext.time << "s" << std::endl;
+
+    status->set_status(TrialStatus::COMPLETED);
+    status->set_message("The trial was completed.");
+    writer->Write(statusMsg);
+
+    // reset environment
+    SimulationManager::reset();
     return grpc::Status::OK;
 }
 

@@ -87,11 +87,22 @@ struct SimulationContext {
     bool debug = false;
 };
 
+struct TrialContext {
+    bool trialRunning = false;
+    double time = 0;
+
+    std::string trialId = "";
+    double trialDuration = 0;
+};
+
 // Singleton SimulationManager class
 class SimulationManager {
 public:
     // data structure with "global variables" needed
     static SimulationContext simContext;
+
+    // trial info to manage
+    static TrialContext trialContext;
 
     // runs the simulation
     static bool run();

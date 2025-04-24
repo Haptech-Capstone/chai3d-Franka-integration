@@ -2,6 +2,7 @@
 #include <iostream>
 
 SimulationContext SimulationManager::simContext;
+TrialContext SimulationManager::trialContext;
 
 bool SimulationManager::run() {
     //--------------------------------------------------------------------------
@@ -480,27 +481,30 @@ void SimulationManager::dataPollingThread() {
     simContext.dataThreadRunning = true;
 
     while (simContext.simulationRunning) {
-        cHapticPoint* hapticPoint = simContext.tool->getHapticPoint(0);
+        if (trialContext.trialRunning) {
+            cHapticPoint* hapticPoint = simContext.tool->getHapticPoint(0);
 
-        if (hapticPoint) {
-            cVector3d proxyPos = hapticPoint->getGlobalPosProxy();
-            cVector3d computedForce = hapticPoint->getLastComputedForce();
+            if (hapticPoint) {
+                cVector3d proxyPos = hapticPoint->getGlobalPosProxy();
+                cVector3d computedForce = hapticPoint->getLastComputedForce();
 
-            cVector3d devicePos;
-            simContext.hapticDevice->getPosition(devicePos);
+                cVector3d devicePos;
+                simContext.hapticDevice->getPosition(devicePos);
 
-            cVector3d deviceForce;
-            simContext.hapticDevice->getForce(deviceForce);
-            
-            if (simContext.debug) {
-                std::cout << "[DEBUG] Device pos: " << devicePos
-                        << " | Proxy pos: " << proxyPos
-                        << " | Device force: " << deviceForce
-                        << " | Computed force: " << computedForce << std::endl;
+                cVector3d deviceForce;
+                simContext.hapticDevice->getForce(deviceForce);
+                
+                if (simContext.debug) {
+                    std::cout << "[DEBUG] t: " << trialContext.time
+                            << " | Device pos: " << devicePos
+                            << " | Proxy pos: " << proxyPos
+                            << " | Device force: " << deviceForce
+                            << " | Computed force: " << computedForce << std::endl;
+                }
             }
-        }
 
-        cSleepMs(1000 / DATA_POLL_FREQUENCY);
+            cSleepMs(1000 / DATA_POLL_FREQUENCY);
+        }
     }
 
     simContext.dataThreadRunning = false;
