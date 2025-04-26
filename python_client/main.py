@@ -1,14 +1,25 @@
 import util
 import grpc
 import franka_trial_pb2_grpc as pb2_grpc
+from parser import xml_parser
 
 def main():
     # Take user input for trial ID, trial duration from config
-    # TODO: load the config file
 
     # Get user input
     trial_id = input("Enter a trial ID: ")
-    duration = float(input("Enter trial duration in seconds: "))
+    config_file_path = input("Enter a path to your config file: ")
+
+    config = xml_parser(config_file_path)
+    end_conditions = config.end_conditions.conditions
+    duration = None
+
+    for condition in end_conditions:
+        if condition.type == "time":
+            duration = float(condition.value)
+
+    if not duration:
+        raise "Invalid trial duration provided. Check your config file for a 'time' end condition."
 
     # connect to the server
     channel = grpc.insecure_channel('localhost:50051')
