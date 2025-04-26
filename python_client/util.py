@@ -1,5 +1,5 @@
 import grpc
-import time
+import csv
 import franka_trial_pb2 as pb2
 import franka_trial_pb2_grpc as pb2_grpc
 
@@ -19,8 +19,22 @@ def handle_stream(stream):
 
 # Handle a TrialStatusUpdate
 def handle_status_update(status):
-    pass  # TODO: Display status
+    # TODO: Display status
+    print(f"Status Update: {status.message} (Status: {status.status})")
 
 # Handle a TrialDataPoint
 def handle_data_point(data):
-    pass  # TODO: Display data point, log to CSV file
+    # Display data point, log to CSV file
+    timestamp = data.timestamp
+    device_pos = data.device_position
+    proxy_pos = data.proxy_position
+    force = data.force
+
+    # display data point
+    print(f"Data Point: {timestamp}, Device Position: {device_pos}, Proxy Position: {proxy_pos}, Force: {force}")
+
+    # log to CSV file
+    with open('trial_data.csv', mode='a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([timestamp, device_pos, proxy_pos, force])
+
