@@ -1,6 +1,7 @@
 import util
 import grpc
 import franka_trial_pb2_grpc as pb2_grpc
+import traceback
 from parser import xml_parser
 
 def main():
@@ -20,15 +21,24 @@ def main():
 
     if not duration:
         raise "Invalid trial duration provided. Check your config file for a 'time' end condition."
+    
+    output_filestream = open(f"{trial_id}_results.csv", 'w')
+    output_filestream.write("t, Device Position, Proxy Position, Force\n")
 
-    # connect to the server
-    channel = grpc.insecure_channel('localhost:50051')
-    stub = pb2_grpc.FrankaTrialServiceStub(channel)
+    try:
+        # connect to the server
+        channel = grpc.insecure_channel('localhost:50051')
+        stub = pb2_grpc.FrankaTrialServiceStub(channel)
 
-    # call run_trial with those values
-    print(f"Starting trial '{trial_id}' for {duration} seconds...")
-    util.run_trial(stub, trial_id, duration)
-    print("Trial completed.")
+        # call run_trial with those values
+        print(f"Starting trial '{trial_id}' for {duration} seconds...")
+        util.run_trial(stub, trial_id, duration, output_filestream)
+        print("Trial completed.")
+    except Exception:
+        print("Something went wrong.")
+        traceback.print_exc()
+    finally:
+        output_filestream.close()
 
 if __name__ == "__main__":
     main()
