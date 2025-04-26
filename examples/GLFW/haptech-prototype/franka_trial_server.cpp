@@ -66,15 +66,28 @@ grpc::Status FrankaTrialServiceImpl::RunTrial(
     // go until time limit reached
     while (SimulationManager::trialContext.time < SimulationManager::trialContext.trialDuration) {
         /*
-            TODO: write data points to stream. how this will be done idk. 
+            TODO: replace the 0.0's to actual values. how they will be collected idk. 
             maybe we can just pull the robot data straight from SimulationManager::simContext like in the dataPollingThread function
             but that sometimes doesn't work for some reason so idk, have fun!
         */
         TrialDataPoint* dataPoint = dataPointMsg.mutable_datapoint();
+
         dataPoint->set_timestamp(SimulationManager::trialContext.time);
-        dataPoint->set_allocated_deviceposition(new Vector3());
-        dataPoint->set_allocated_proxyposition(new Vector3());
-        dataPoint->set_allocated_force(new Vector3());
+        
+        Vector3* devicePos = dataPoint->mutable_deviceposition();
+        devicePos->set_x(0.0);
+        devicePos->set_y(0.0);
+        devicePos->set_z(0.0);
+
+        Vector3* proxyPos = dataPoint->mutable_proxyposition();
+        proxyPos->set_x(0.0);
+        proxyPos->set_y(0.0);
+        proxyPos->set_z(0.0);
+
+        Vector3* force = dataPoint->mutable_force();
+        force->set_x(0.0);
+        force->set_y(0.0);
+        force->set_z(0.0);
 
         writer->Write(dataPointMsg);
 
