@@ -7,6 +7,7 @@ grpc::Status FrankaTrialServiceImpl::RunTrial(
     grpc::ServerWriter<TrialResponseStream>* writer
 ) {
     TrialResponseStream statusMsg;
+    TrialResponseStream dataPointMsg;
 
     // make sure we can run a trial
     if (!SimulationManager::simContext.simulationRunning) {
@@ -65,10 +66,17 @@ grpc::Status FrankaTrialServiceImpl::RunTrial(
     // go until time limit reached
     while (SimulationManager::trialContext.time < SimulationManager::trialContext.trialDuration) {
         /*
-         TODO: write data points to stream. how this will be done idk. 
-         maybe we can just pull the robot data straight from SimulationManager::simContext like in the dataPollingThread function
-         but that sometimes doesn't work for some reason so idk, have fun!
+            TODO: write data points to stream. how this will be done idk. 
+            maybe we can just pull the robot data straight from SimulationManager::simContext like in the dataPollingThread function
+            but that sometimes doesn't work for some reason so idk, have fun!
         */
+        TrialDataPoint* dataPoint = dataPointMsg.mutable_datapoint();
+        dataPoint->set_timestamp(SimulationManager::trialContext.time);
+        dataPoint->set_allocated_deviceposition(new Vector3());
+        dataPoint->set_allocated_proxyposition(new Vector3());
+        dataPoint->set_allocated_force(new Vector3());
+
+        writer->Write(dataPointMsg);
 
         if (SimulationManager::simContext.debug) {
             std::cout << "[DEBUG] [" << SimulationManager::trialContext.trialId << "] t = " << SimulationManager::trialContext.time << std::endl;
