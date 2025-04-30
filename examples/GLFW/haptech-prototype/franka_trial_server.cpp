@@ -63,31 +63,47 @@ grpc::Status FrankaTrialServiceImpl::RunTrial(
     cPrecisionClock clock;
     clock.start();
 
+    auto hapticPoint = SimulationManager::simContext.tool->getHapticPoint(0);
+
+    if (!hapticPoint) {
+        std::cout << "[ERROR] Haptic point not found." << std::endl;
+
+        TrialStatusUpdate* status = statusMsg.mutable_statusupdate();
+        status->set_status(TrialStatus::ERROR);
+        status->set_message("Haptic point not found.");
+        writer->Write(statusMsg);
+
+        return grpc::Status::OK;
+    }
+    cVector3d retrievedProxyPos;
+    cVector3d retrievedComputedForce;
+    cVector3d retrievedDevicePos;
+
     // go until time limit reached
     while (SimulationManager::trialContext.time < SimulationManager::trialContext.trialDuration) {
-        /*
-            TODO: replace the 0.0's to actual values. how they will be collected idk. 
-            maybe we can just pull the robot data straight from SimulationManager::simContext like in the dataPollingThread function
-            but that sometimes doesn't work for some reason so idk, have fun!
-        */
+        // get haptic point data
+        retrievedProxyPos = hapticPoint->getGlobalPosProxy();
+        retrievedComputedForce = hapticPoint->getLastComputedForce();
+        retrievedDevicePos = SimulationManager::simContext.tool->getDeviceGlobalPos();
+
         TrialDataPoint* dataPoint = dataPointMsg.mutable_datapoint();
 
         dataPoint->set_timestamp(SimulationManager::trialContext.time);
-        
+
         Vector3* devicePos = dataPoint->mutable_deviceposition();
-        devicePos->set_x(0.0);
-        devicePos->set_y(0.0);
-        devicePos->set_z(0.0);
+        devicePos->set_x(retrievedDevicePos.x());
+        devicePos->set_y(retrievedDevicePos.y());
+        devicePos->set_z(retrievedDevicePos.z());
 
         Vector3* proxyPos = dataPoint->mutable_proxyposition();
-        proxyPos->set_x(0.0);
-        proxyPos->set_y(0.0);
-        proxyPos->set_z(0.0);
+        proxyPos->set_x(retrievedProxyPos.x());
+        proxyPos->set_y(retrievedProxyPos.y());
+        proxyPos->set_z(retrievedProxyPos.z());
 
         Vector3* force = dataPoint->mutable_force();
-        force->set_x(0.0);
-        force->set_y(0.0);
-        force->set_z(0.0);
+        force->set_x(retrievedComputedForce.x());
+        force->set_y(retrievedComputedForce.y());
+        force->set_z(retrievedComputedForce.z());
 
         writer->Write(dataPointMsg);
 

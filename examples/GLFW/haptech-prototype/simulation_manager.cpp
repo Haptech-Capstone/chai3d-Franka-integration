@@ -467,6 +467,11 @@ void SimulationManager::updateHaptics(void) {
         // compute interaction forces
         simContext.tool->computeInteractionForces();
 
+        auto hapticPoint = simContext.tool->getHapticPoint(0);
+        cVector3d proxyPos = hapticPoint->getGlobalPosProxy();
+        cVector3d computedForce = hapticPoint->getLastComputedForce();
+        
+
         // apply forces
         simContext.tool->applyToDevice();
 
