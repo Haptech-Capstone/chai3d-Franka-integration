@@ -48,6 +48,9 @@ struct SimulationContext {
     // a label to display the rates [Hz] at which the simulation is running
     cLabel* labelRates;
 
+    // a label to display the current status, i.e. "waiting for trial to begin"
+    cLabel* statusText;
+
     // a virtual tool representing the haptic device in the scene
     cToolCursor* tool;
 

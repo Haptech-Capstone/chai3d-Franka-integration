@@ -179,12 +179,17 @@ bool SimulationManager::run() {
 
     // create a font
     cFontPtr font = NEW_CFONTCALIBRI20();
+    cFontPtr biggerFont = NEW_CFONTCALIBRI36();
     
     // create a label to display the haptic and graphic rates of the simulation
     simContext.labelRates = new cLabel(font);
     simContext.labelRates->m_fontColor.setWhite();
     simContext.camera->m_frontLayer->addChild(simContext.labelRates);
 
+    // create a label to display the current trial status (i.e. running or not)
+    simContext.statusText = new cLabel(biggerFont);
+    simContext.statusText->m_fontColor.setWhite();
+    simContext.camera->m_frontLayer->addChild(simContext.statusText);
 
     //--------------------------------------------------------------------------
     // START SIMULATION
@@ -432,6 +437,14 @@ void SimulationManager::updateGraphics(void) {
     // update position of label
     simContext.labelRates->setLocalPos((int)(0.5 * (simContext.width - simContext.labelRates->getWidth())), 15);
 
+    // update status text
+    if (trialContext.trialRunning) {
+        simContext.statusText->setText("Trial running: " + trialContext.trialId + " | t = " + cStr(trialContext.time, 4));
+    } else {
+        simContext.statusText->setText("Waiting for a trial to begin");
+    }
+
+    simContext.statusText->setLocalPos(5, simContext.height - simContext.statusText->getHeight() - 5);
 
     /////////////////////////////////////////////////////////////////////
     // RENDER SCENE
