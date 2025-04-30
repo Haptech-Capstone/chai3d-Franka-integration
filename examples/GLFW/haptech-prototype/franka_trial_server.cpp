@@ -35,13 +35,39 @@ grpc::Status FrankaTrialServiceImpl::RunTrial(
     // add objects (hard coded for now, load from config info later)
     SimulationManager::reset();
 
-    if (!SimulationManager::addSphere("THE SPHERE", 0.1, 0.2, 0.0, 0.0)) {
-
+    // Change the background color to a light blue
+    if (!SimulationManager::setBackgroundColor(204/255, 204/255, 255/255)) {
         TrialStatusUpdate* status = statusMsg.mutable_statusupdate();
         status->set_status(TrialStatus::ERROR);
         status->set_message("Something went wrong loading the trial.");
         writer->Write(statusMsg);
+        return grpc::Status::OK;
+    }
 
+    // Add sphere - positioned back and to the left
+    if (!SimulationManager::addSphere("SMALL_SPHERE", 0.08, -0.2, 0.0, -0.1)) {
+        TrialStatusUpdate* status = statusMsg.mutable_statusupdate();
+        status->set_status(TrialStatus::ERROR);
+        status->set_message("Something went wrong loading the trial.");
+        writer->Write(statusMsg);
+        return grpc::Status::OK;
+    }
+
+    // Add torus - positioned to the right
+    if (!SimulationManager::addSphere("BIG_SPHERE", 0.2, -0.3, 0.3, 0.0)) {
+        TrialStatusUpdate* status = statusMsg.mutable_statusupdate();
+        status->set_status(TrialStatus::ERROR);
+        status->set_message("Something went wrong loading the trial.");
+        writer->Write(statusMsg);
+        return grpc::Status::OK;
+    }
+
+    // Add torus - positioned to the right
+    if (!SimulationManager::addSphere("MEDIUM_SPHERE", 0.1, -0.1, -0.2, 0.0)) {
+        TrialStatusUpdate* status = statusMsg.mutable_statusupdate();
+        status->set_status(TrialStatus::ERROR);
+        status->set_message("Something went wrong loading the trial.");
+        writer->Write(statusMsg);
         return grpc::Status::OK;
     }
 
