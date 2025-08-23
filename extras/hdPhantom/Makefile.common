@@ -44,9 +44,9 @@ GLEW_DIR   = ../../external/glew
 EIGEN_DIR  = ../../external/Eigen
 
 # determine version info
-MAJOR   = $(shell cat $(CHAI3D_DIR)/src/version | grep MAJOR   | awk 'BEGIN { FS = "=" } { print $$2 }' )
-MINOR   = $(shell cat $(CHAI3D_DIR)/src/version | grep MINOR   | awk 'BEGIN { FS = "=" } { print $$2 }' )
-RELEASE = $(shell cat $(CHAI3D_DIR)/src/version | grep RELEASE | awk 'BEGIN { FS = "=" } { print $$2 }' )
+MAJOR   = $(shell cat $(CHAI3D_DIR)/src/version.txt | grep MAJOR   | awk 'BEGIN { FS = "=" } { print $$2 }' )
+MINOR   = $(shell cat $(CHAI3D_DIR)/src/version.txt | grep MINOR   | awk 'BEGIN { FS = "=" } { print $$2 }' )
+RELEASE = $(shell cat $(CHAI3D_DIR)/src/version.txt | grep RELEASE | awk 'BEGIN { FS = "=" } { print $$2 }' )
 
 # determine build configuration
 ifneq ($(CFG),debug)

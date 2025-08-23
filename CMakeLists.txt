@@ -49,7 +49,7 @@ message("THIS IS CMAKE - ${PROJECT_NAME}")
 message("---")
 
 # version info
-file (READ ${PROJECT_SOURCE_DIR}/src/version VERSION)
+file (READ ${PROJECT_SOURCE_DIR}/src/version.txt VERSION)
 STRING (REGEX REPLACE ".*MAJOR=([0-9]+).*" "\\1" MAJOR_VERSION "${VERSION}")
 STRING (REGEX REPLACE ".*MINOR=([0-9]+).*" "\\1" MINOR_VERSION "${VERSION}")
 STRING (REGEX REPLACE ".*RELEASE=([0-9]+).*" "\\1" RELEASE_VERSION "${VERSION}")
@@ -145,7 +145,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES Linux)
 elseif (${CMAKE_SYSTEM_NAME} MATCHES Darwin)
   add_definitions (-DMACOSX)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments -Wno-deprecated -std=c++0x -stdlib=libc++")
-  set (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Qunused-arguments -Wno-deprecated")
+  # Force include unistd.h so lseek is declared, and math.h to avoid obsolete fp.h
+  set (CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Qunused-arguments -Wno-deprecated -include unistd.h -include math.h")
 endif ()
 
 
@@ -193,6 +194,11 @@ else ()
   file (GLOB_RECURSE source_theora_exclude RELATIVE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/external/theoraplayer/external/theora/lib/x86_vc/*.c)
 endif ()
 list (REMOVE_ITEM source_theora ${source_theora_exclude})
+
+# On non-x86 architectures (e.g., Apple Silicon arm64), exclude x86-only OpenAL SSE sources
+if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64|AMD64|i.86)")
+  list(REMOVE_ITEM source_openal "external/openal/Alc/mixer_sse.c")
+endif()
 
 # group source files (MSVC likes this)
 foreach (FILE ${source} ${source_eigen} ${source_gif} ${source_glew} ${source_3ds} ${source_jpeg} ${source_png} ${source_pugixml} ${source_openal} ${source_theora})

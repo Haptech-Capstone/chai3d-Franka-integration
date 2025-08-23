@@ -28,7 +28,8 @@
 
 #define RESTRICT __restrict
 #define HAVE__ALIGNED_MALLOC
-#define HAVE_SSE
+/* Disabled on non-x86 architectures */
+/* #define HAVE_SSE */
 #define HAVE_MMDEVAPI
 #define HAVE_DSOUND
 #define HAVE_WINMM
@@ -78,7 +79,7 @@
 #define HAVE_PTHREAD_SETSCHEDPARAM
 
 #if defined(__i386__) | defined(__amd64__)
-#define HAVE_SSE
+/* #define HAVE_SSE */
 #define HAVE_XMMINTRIN_H
 #endif
 
@@ -92,7 +93,7 @@
 #define RESTRICT __restrict
 
 #define HAVE_POSIX_MEMALIGN
-#define HAVE_SSE
+/* #define HAVE_SSE */
 #define HAVE_COREAUDIO
 #define HAVE_WAVE
 #define HAVE_STAT
